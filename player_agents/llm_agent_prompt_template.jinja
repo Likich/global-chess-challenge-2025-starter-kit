@@ -8,9 +8,13 @@ Board looks like this right now
 
 Select the best move. Keep your thinking to 2 sentences or less, then output your chosen move.
 
-CRITICAL: Your UCI move must always be one of the moves from legal_moves_uci. With no spaces in between.
+CRITICAL FORMAT REQUIREMENTS:
+1. Your final answer MUST be exactly two XML tags: `<think>…</think>` followed by `<uci_move>…</uci_move>`.
+2. The move inside `<uci_move>` must be a single legal UCI string taken from `legal_moves_uci` with no quotes, spaces, or commentary.
+3. Do not include SQL, tables, markdown, code fences, or any other prose outside the two tags. Violating this format means you instantly lose the game.
 
-An example of a valid move for this position is <uci_move>{{ first_legal_move }}</uci_move>. 
+An example of a valid move for this position is <uci_move>{{ first_legal_move }}</uci_move>.
+
 Format:
 <think>brief thinking (2 sentences max)</think>
 <uci_move>your_move</uci_move>"""

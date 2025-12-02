@@ -307,16 +307,42 @@ class OpenAIEndpointAgent(ChessAgent):
             raise FileNotFoundError(f"Template file not found: {self.template_file}")
         
         return prompt
+
+    def _extract_fallback_move(
+        self, response: str, legal_moves: List[chess.Move]
+    ) -> Optional[str]:
+        """Try to find a legal UCI move anywhere in the response text."""
+        legal_lookup = {move.uci(): move for move in legal_moves}
+        alnum_boundary = r"[A-Za-z0-9]"
+
+        # First, look for exact legal move strings to avoid false positives.
+        for uci_move in legal_lookup:
+            pattern = rf"(?<!{alnum_boundary}){re.escape(uci_move)}(?!{alnum_boundary})"
+            if re.search(pattern, response):
+                return uci_move
+
+        # Next, extract any UCI-like tokens and verify against legal moves.
+        candidates = re.findall(r"\b[a-h][1-8][a-h][1-8][qrbn]?\b", response.lower())
+        for candidate in candidates:
+            if candidate in legal_lookup:
+                return candidate
+
+        return None
     
     def _parse_move(self, response: str, legal_moves: List[chess.Move]) -> Optional[chess.Move]:
         """Parse the move from the API response."""
         # Extract move from <uci_move> tags
         match = re.search(r'<uci_move>(.*?)</uci_move>', response, re.IGNORECASE | re.DOTALL)
-        if not match:
-            print(f"Warning: Could not find <uci_move> tags in response: {response[:100]}")
-            return None
-        
-        move_str = match.group(1).strip()
+        move_str = match.group(1).strip() if match else None
+
+        if not move_str:
+            fallback = self._extract_fallback_move(response, legal_moves)
+            if fallback:
+                move_str = fallback
+                print(f"Info: Falling back to detected move '{move_str}' found elsewhere in response.")
+            else:
+                print(f"Warning: Could not find <uci_move> tags or detect a legal move in response: {response[:100]}")
+                return None
         
         # Check for resignation
         if move_str.lower() == "resign":
