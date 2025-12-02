@@ -710,6 +710,12 @@ def main():
         help="Path to Jinja2 template file for prompt formatting"
     )
     parser.add_argument(
+        "--model-name",
+        type=str,
+        default="aicrowd-chess-model",
+        help="Model name to request from the OpenAI-compatible endpoint"
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Print input prompts and output responses for debugging"
@@ -738,6 +744,7 @@ def main():
         base_url=args.endpoint,
         api_key=args.api_key,
         max_retries=args.max_retries,
+        model=args.model_name,
         template_file=args.template_file,
         debug=args.debug
     )
