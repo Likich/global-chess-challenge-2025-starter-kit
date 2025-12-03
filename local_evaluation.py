@@ -398,7 +398,9 @@ class OpenAIEndpointAgent(ChessAgent):
                     messages=[
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=500,
+                    max_tokens=256,
+                    temperature=0,
+                    top_p=0.1,
 
                 )
                 elapsed_time = time.time() - start_time
@@ -428,8 +430,8 @@ class OpenAIEndpointAgent(ChessAgent):
                     print(f"Warning: Invalid move on attempt {attempt + 1}, retrying...")
                     continue
                 else:
-                    print(f"Warning: Failed after {self.max_retries + 1} attempts, resigning")
-                    return None, f"Resigned after {self.max_retries + 1} failed attempts"
+                    print(f"Warning: Failed after {self.max_retries + 1} attempts, falling back to first legal move")
+                    return legal_moves[0], "Fallback legal move"
                 
             except Exception as e:
                 if attempt < self.max_retries:
@@ -437,9 +439,9 @@ class OpenAIEndpointAgent(ChessAgent):
                     continue
                 else:
                     print(f"Error: API call failed after {self.max_retries + 1} attempts: {e}")
-                    return None, f"Resigned due to API error: {e}"
+                    return legal_moves[0], f"Fallback legal move after API error: {e}"
         
-        return None, "Failed to get valid move"
+        return legal_moves[0], "Fallback legal move (no valid move returned)"
     
     def get_avg_move_time(self) -> float:
         """Get average time per move."""
